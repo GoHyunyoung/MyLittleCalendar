@@ -211,7 +211,7 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                             Toast.makeText(getApplicationContext(), "클릭됨.", Toast.LENGTH_SHORT).show();
                             //수정
                             enterRoomInBackGround(roomNumber, hostid.getText().toString(), Integer.parseInt(roomid.getText().toString()));
-
+                            dialog.dismiss();
                         }
 
                     });
@@ -349,7 +349,6 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
         // List Adapter 생성
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(GroupActivity.this, android.R.layout.select_dialog_singlechoice);
         adapter.add("일정 추가");
-        adapter.add("일정 목록");
         // 버튼 생성
         alertBuilder.setNegativeButton("취소",
                 new DialogInterface.OnClickListener() {
@@ -367,7 +366,7 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                 String strName = adapter.getItem(id);
                 AlertDialog.Builder innBuilder = new AlertDialog.Builder(GroupActivity.this);
                 final ArrayAdapter<String> innAdapter = new ArrayAdapter<String>(GroupActivity.this, android.R.layout.select_dialog_singlechoice);
-                if (id == 0) {
+
                     innBuilder.setIcon(R.mipmap.ic_launcher);
                     innBuilder.setTitle("일정 추가");
                     innBuilder.setNegativeButton("취소",
@@ -390,25 +389,13 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                     //innBuilder.setMessage(strName);
 
                     innBuilder.show();
-                } else if (id == 1) {
-                    innBuilder.setMessage(strName);
-                    innBuilder.setIcon(R.mipmap.ic_launcher);
-                    innBuilder.setTitle("일정 목록");
-                    innBuilder.setPositiveButton("확인",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            });
-                    innBuilder.show();
-                }
+
             }
         });
         alertBuilder.show();
     }
 
     public void enterRoomInBackGround(final int roomNumber, final String hostId, final int roomId) {
-
 
         new AsyncTask<Void, Void, String>() {
             @Override

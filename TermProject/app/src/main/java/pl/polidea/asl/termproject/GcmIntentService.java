@@ -69,20 +69,21 @@ public class GcmIntentService extends IntentService {
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, MainActivity.class), 0);
 
+        String noti;
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setContentTitle("GCM Notification")
+                        .setSmallIcon(R.drawable.logo)
+                        .setContentTitle("My Little Calender")
                         .setStyle(new NotificationCompat.BigTextStyle()
-                                .bigText("새로운 일정이 동기화 되었습니다."))
-                        .setContentText("새로운 일정이 동기화 되었습니다.");
+                                .bigText(noti = msgParsing(msg) + "\n새로운 일정이 동기화 되었습니다."))
+                        .setContentText(noti);
         System.out.println(msg);
-        msgParsing(msg);
+        //msgParsing(msg);
 
         mBuilder.setContentIntent(contentIntent);
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
-    public void msgParsing(String msg){
+    public String msgParsing(String msg){
         String title = "";
         String date = "";
         String time = "";
@@ -114,9 +115,10 @@ public class GcmIntentService extends IntentService {
             }
 
             System.out.println("title -> "+title+" date -> "+date+" time -> "+time);
-
+            msg = "TITLE : "+title+" DATE : "+date+" TIME : "+time;
         }
 
+        return msg;
     }
 }
 
