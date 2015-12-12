@@ -104,7 +104,7 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
 
                     Integer.parseInt(selectedDate.split("/")[2]);
 
-                    Intent intent = new Intent(CalendarActivity.this, Detail.class);
+                    Intent intent = new Intent(CalendarActivity.this, DetailActivity.class);
                     intent.putExtra("Date", selectedDate);
                     //addTask버튼 누를시 Param에 1전달
                     intent.putExtra("Param", 1);
@@ -425,7 +425,7 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
                 //커서 객체를 통해 일정의 타이틀을 가져옴
                 Cursor c = (Cursor) parent.getItemAtPosition(pos);
 //                Toast.makeText(getApplicationContext(),c.getString(1),Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(this, Detail.class);
+                Intent intent = new Intent(this, DetailActivity.class);
                 intent.putExtra("_id", Integer.parseInt(c.getString(0)));
                 //lv_Task버튼 누를시 Param에 2전달
                 intent.putExtra("Param", 2);

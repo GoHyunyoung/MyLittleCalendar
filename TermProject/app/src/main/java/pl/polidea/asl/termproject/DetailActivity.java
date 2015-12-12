@@ -16,7 +16,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TimePicker;
 
-public class Detail extends Activity implements OnClickListener {
+public class DetailActivity extends Activity implements OnClickListener {
     private static final int DIALOG_DATE =0;
     private static final int DIALOG_TIME = 1;
 
