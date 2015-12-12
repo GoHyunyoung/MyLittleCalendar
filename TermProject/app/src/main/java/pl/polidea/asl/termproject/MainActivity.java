@@ -13,8 +13,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TabHost;
@@ -75,11 +73,6 @@ public class MainActivity extends TabActivity {
                 .setIndicator("GROUP", getResources().getDrawable(R.drawable.ic_btn_share))
                 .setContent(new Intent(this, GroupActivity.class)));
 
-        // 3번째 Tab
-        tabHost.addTab(tabHost.newTabSpec("FREIND")
-                .setIndicator("FREIND", getResources().getDrawable(R.drawable.ic_btn_share))
-                .setContent(new Intent(this, FriendActivity.class)));
-
         tabHost.setCurrentTab(0);
 
         myinfo = PreferenceManager.getDefaultSharedPreferences(this);
@@ -112,7 +105,7 @@ public class MainActivity extends TabActivity {
             Log.i(TAG, "No valid Google Play Services APK found.");
         }
     }
-
+/*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -133,7 +126,7 @@ public class MainActivity extends TabActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
+    }*/
     public void register_info(){
         LayoutInflater inflater = getLayoutInflater();
         final View view_enroll = inflater.inflate(R.layout.activity_dialogue, null);
@@ -198,7 +191,7 @@ public class MainActivity extends TabActivity {
                         gcm = GoogleCloudMessaging.getInstance(context);
                     }
                     regid = gcm.register(SENDER_ID);
-                    //msg = "Device registered, registration ID=" + regid;
+                    msg = "Device registered, registration ID=" + regid;
                     //msg = regid;
 
                     SharedPreferences.Editor editor = myinfo.edit();

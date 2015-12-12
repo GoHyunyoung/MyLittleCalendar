@@ -28,8 +28,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class CalendarActivity extends Activity implements OnClickListener,
-        OnItemClickListener {
+public class CalendarActivity extends Activity implements OnClickListener, OnItemClickListener {
     ArrayList<String> m_date;
     ArrayList<String> m_tasklist;
     CustomAdapter gv_adapter;
@@ -47,8 +46,8 @@ public class CalendarActivity extends Activity implements OnClickListener,
     ImageButton btn_share;
 
     //일정관리를 위한 DB
-    MyDBHelper myDBHelper;
-    SQLiteDatabase db;
+    static MyDBHelper myDBHelper;
+    static SQLiteDatabase db;
     Cursor cursor;
     SimpleCursorAdapter adapter;
 
@@ -58,8 +57,11 @@ public class CalendarActivity extends Activity implements OnClickListener,
     Button btn_prev_month, btn_next_month;
     //현재 년도와 달
     int year, mon;
+    static Context context;
+    public static Context getAppContext() {
 
-
+        return CalendarActivity.context;
+    }
     /**
      * Called when the activity is first created.
      */
@@ -67,6 +69,7 @@ public class CalendarActivity extends Activity implements OnClickListener,
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
+
 
         myDBHelper = new MyDBHelper(this, "Today.db", null, 1);
         tv_year = (TextView) findViewById(R.id.tv_year);
@@ -130,6 +133,28 @@ public class CalendarActivity extends Activity implements OnClickListener,
 
     }
 
+    static public void notificatonCalander(String title, String date, String time){
+        System.out.println(title + date + time);
+        Cursor cursor1;
+        //MyDBHelper addDBHelper = new MyDBHelper(getAppContext(), "Today.db", null, 1);
+        //SQLiteDatabase addb = addDBHelper.getWritableDatabase();
+        cursor1 = db.rawQuery("SELECT * FROM today WHERE title = '"+title+"' and date = '"+date + "' and time = '"+time+"'", null);
+        int flag = 0;
+        while(cursor1.moveToNext()){
+            flag = 1;
+            System.out.println("중복된 일정이 이따!!!!!!");
+            break;
+        }
+        if(flag == 0){
+            db.execSQL("INSERT INTO today VALUES(null, '"
+                    + title + "', '"
+                    + date + "', '"
+                    + time + "');");
+            System.out.println("ADDED TASK");
+        }//gv_adapter.notifyDataSetChanged();*/
+
+    }
+
     private class CustomAdapter<String> extends BaseAdapter implements OnClickListener {
         ArrayList m_date;
 
@@ -173,9 +198,8 @@ public class CalendarActivity extends Activity implements OnClickListener,
             tv.setText(getItem(position).toString());
 
             cursor = db.rawQuery("SELECT * FROM today WHERE date = '" + year + "/" + mon + "/" + getItem(position) + "'", null);
-
             if (cursor.moveToNext()) {
-                 //레이아웃을 빨강으로처리
+                //레이아웃을 빨강으로처리
                 layout.setBackgroundColor(0x55f90000);
                 //문구에있는 내용에 따라 아이콘모양 추가
                 if (cursor.getString(1).contains("생일") ||
@@ -189,7 +213,7 @@ public class CalendarActivity extends Activity implements OnClickListener,
                     iv1.setImageDrawable(getResources().getDrawable(R.drawable.ic_meeting));
                 else if (cursor.getString(1).contains("공연") ||
                         cursor.getString(1).contains("축제") ||
-                        cursor.getString(1).contains("여행")||
+                        cursor.getString(1).contains("여행") ||
                         cursor.getString(1).contains("할인"))
                     iv1.setImageDrawable(getResources().getDrawable(R.drawable.ic_ticket));
                 else if (cursor.getString(1).contains("과제") ||
@@ -381,8 +405,7 @@ public class CalendarActivity extends Activity implements OnClickListener,
         //SELECT * FROM today WHERE YEAR = 'year'
 
         cursor = db.rawQuery("SELECT * FROM today WHERE date = '" + today + "'", null);
-        adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, cursor,
-                new String[]{"time", "title"},
+        adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2, cursor, new String[]{"time", "title"},
                 new int[]{android.R.id.text1, android.R.id.text2});
         ListView list = (ListView) findViewById(R.id.lv_task);
         list.setAdapter(adapter);

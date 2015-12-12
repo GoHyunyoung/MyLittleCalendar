@@ -12,6 +12,9 @@ import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 /**
  * Created by icelancer on 15. 2. 21..
  */
@@ -71,10 +74,49 @@ public class GcmIntentService extends IntentService {
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentTitle("GCM Notification")
                         .setStyle(new NotificationCompat.BigTextStyle()
-                                .bigText(msg))
-                        .setContentText(msg);
+                                .bigText("새로운 일정이 동기화 되었습니다."))
+                        .setContentText("새로운 일정이 동기화 되었습니다.");
+        System.out.println(msg);
+        msgParsing(msg);
 
         mBuilder.setContentIntent(contentIntent);
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
+    public void msgParsing(String msg){
+        String title = "";
+        String date = "";
+        String time = "";
+
+        Log.i("test", "title : "+title+" len : "+title.length());
+
+        msg = msg.substring(msg.indexOf("ST_")+3, msg.indexOf("_END"));
+        System.out.println(msg);
+        if(msg.substring(0, 4).equals("NEW_")){
+            msg = msg.substring(4);
+            try {
+
+
+                title = msg.substring(0, msg.indexOf("DATE_"));
+                title = URLDecoder.decode(title, "euc-kr");
+                msg = msg.substring(msg.indexOf("DATE_") + 5);
+
+                date = msg.substring(0, msg.indexOf("TIME_"));
+                msg = msg.substring(msg.indexOf("TIME_") + 5);
+
+                time = msg;
+                time = URLDecoder.decode(time, "euc-kr");
+                //notificationCalander(title,date,time);
+                CalendarActivity cal = new CalendarActivity();
+                cal.notificatonCalander(title, date, time);
+                CalendarActivity.notificatonCalander(title, date, time);
+            } catch (UnsupportedEncodingException e){
+                Log.d("TAG", e.getMessage());
+            }
+
+            System.out.println("title -> "+title+" date -> "+date+" time -> "+time);
+
+        }
+
+    }
 }
+
