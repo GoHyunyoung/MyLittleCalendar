@@ -1,6 +1,7 @@
 package pl.polidea.asl.termproject;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.app.TabActivity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -23,6 +24,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -31,26 +33,25 @@ import java.net.Socket;
 public class MainActivity extends TabActivity {
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private DataOutputStream os;
+    private DataInputStream is;
     private static final int PORT = 5555;
     private Socket socket;
     private String IP = "192.168.84.1";
     private static int regFlag = 0;
 
-    // SharedPreferences에 저장할 때 key 값으로 사용됨.
     public static final String PROPERTY_REG_ID = "mylittlecalendar-1143";
-
-    // SharedPreferences에 저장할 때 key 값으로 사용됨.
     private static final String PROPERTY_APP_VERSION = "1.0";
     private static final String TAG = "ICELANCER";
-    private static final String REGID = "regid";
     String SENDER_ID = "98102895089";
 
+    String clientID;
+    String clientEM;
+    String clientNAME;  //AsyncTask를 위한 변수들.
 
     GoogleCloudMessaging gcm;
-    //SharedPreferences prefs;
     Context context;
 
-    SharedPreferences myinfo;
+    SharedPreferences information;
 
     String regid;
     private TextView mDisplay;
@@ -64,69 +65,30 @@ public class MainActivity extends TabActivity {
 
         TabHost tabHost = getTabHost();
 
-        // 1번째 Tab
+        // 1번째 Tab      캘린더
         tabHost.addTab(tabHost.newTabSpec("CALENDAR")
                 .setIndicator("CALENDAR", getResources().getDrawable(R.drawable.ic_btn_addtask))
                 .setContent(new Intent(this, CalendarActivity.class)));
-        // 2번째 Tab
+        // 2번째 Tab      그룹
         tabHost.addTab(tabHost.newTabSpec("GROUP")
                 .setIndicator("GROUP", getResources().getDrawable(R.drawable.ic_btn_share))
                 .setContent(new Intent(this, GroupActivity.class)));
 
         tabHost.setCurrentTab(0);
 
-        myinfo = PreferenceManager.getDefaultSharedPreferences(this);
-        //mDisplay = (TextView) findViewById(R.id.display);
+        information = PreferenceManager.getDefaultSharedPreferences(this);
         context = getApplicationContext();
-        //mInfoText = (TextView) findViewById(R.id.infor);
 
-        if(myinfo.getString("storedId","") == ""){
+        if(information.getString("storedId","") == ""){
             register_info();
-        }
+        }       //저장된 아이디가 없다면 계정 등록
 
-        if(myinfo.getString("storedIp","") != ""){
-            IP = myinfo.getString("storedIp","");
-        }
-
-        if (checkPlayServices()) {
-            gcm = GoogleCloudMessaging.getInstance(this);
-            regid = getRegistrationId(context);
-
-            if (regid.isEmpty()) {
-                registerInBackground();
-            }
+        if(information.getString("storedIp","") != ""){
+            IP = information.getString("storedIp","");
+        }       //아이피가 저장될 경우 아이피 저장
 
 
-            //SharedPreferences.Editor editor = myinfo.edit();
-            //editor.putString(MYREGID,"");
-            //editor.commit();
-
-        } else {
-            Log.i(TAG, "No valid Google Play Services APK found.");
-        }
     }
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }*/
     public void register_info(){
         LayoutInflater inflater = getLayoutInflater();
         final View view_enroll = inflater.inflate(R.layout.activity_dialogue, null);
@@ -135,33 +97,50 @@ public class MainActivity extends TabActivity {
         final EditText myemail = (EditText) view_enroll.findViewById(R.id.et_regemail);
         final EditText ipadrress = (EditText)   view_enroll.findViewById(R.id.et_regip);
         ipadrress.setText(IP);
-        final AlertDialog.Builder buider = new AlertDialog.Builder(this); //AlertDialog.Builder 객체 생성
+        final AlertDialog.Builder buider = new AlertDialog.Builder(this); //객체 생성
 
-        buider.setTitle("등록하시겠습니까?"); //Dialog 제목
-        buider.setView(view_enroll); //위에서 inflater가 만든 dialogView 객체 세팅 (Customize)
-        buider.setPositiveButton("등록", new DialogInterface.OnClickListener() {
-            //Dialog에 "Complite"라는 타이틀의 버튼을 설정
+        buider.setTitle("INPUT YOUR INFORMATION"); //타이틀
+        buider.setView(view_enroll); //빌더 세팅
+        buider.setIcon(R.drawable.logo);   //이미지
+        buider.setPositiveButton("제출", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (myname.getText().length() >= 3 && myemail.getText().length() >= 3) {
+                if (myname.getText().length() >= 1 && myemail.getText().length() >= 1 && myid.getText().length() >= 1) {
                     String name = myname.getText().toString();//사용자이름
                     String email = myemail.getText().toString();//사용자id
                     String id = myid.getText().toString();
                     IP = ipadrress.getText().toString();
-                    SharedPreferences.Editor editor= myinfo.edit();
+
+                    clientNAME = name;
+                    clientEM = email;
+                    clientID = id;
+                    /*
+                    SharedPreferences.Editor editor= information.edit();
                     editor.putString("storedName", name);
                     editor.putString("storedEmail", email);
                     editor.putString("storedId",id);
                     editor.putString("storedIp",IP);
                     editor.commit();
-                    regFlag = 1;
-                    //서버에 등록
-                    //register(email, redID, name);
-                    //액티비티상에 내정보 등록 & 어플리케이션에 내정보 저장
+                    */
+                    //regFlag = 1;    //저장과 동시에, 백그라운드에서 대기하던 서버통신 재개
+                    //new ProgressDlgTest(Main.this).execute(100);
+                    //다이얼로그에 입력된 계정 정보들을 저장한다.
+
+                    if (checkPlayServices()) {      //gcm과 통신이 가능한지 검사
+                        gcm = GoogleCloudMessaging.getInstance(MainActivity.this);
+                        regid = getRegistrationId(context);
+                        //regID를 가져온다.
+                        if (regid.isEmpty() || information.getString("storedIp","") == null) {
+                            registerInBackground();
+                        }
+                        //만약 없다면 백그라운드에서 새로운 regID를 발급 받는다.
+                    } else {
+                        Log.i(TAG, "No valid Google Play Services APK found.");
+                    }
 
 
                 } else {
-                    Toast.makeText(MainActivity.this, "NAME : 3글자이상\nE-MAIL : 3글자이상 입력하시오.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "NULL값을 가질 수 없습니다.", Toast.LENGTH_LONG).show();
                     register_info();
                 }
             }
@@ -181,10 +160,34 @@ public class MainActivity extends TabActivity {
         buider.show();
     }
 
+
+
     private void registerInBackground() {
-        new AsyncTask<Void, Void, String>() {
+        new AsyncTask<Integer, String, Integer>() {
+            private ProgressDialog mDlg;
+
             @Override
-            protected String doInBackground(Void... params) {
+            protected void onCancelled() {
+            // TODO Auto-generated method stub
+                mDlg.dismiss();
+                finish();
+                Log.d(TAG,"OnCancelled");
+            }
+
+
+            @Override
+            protected void onPreExecute() {
+                // TODO Auto-generated method stub
+                mDlg = new ProgressDialog(MainActivity.this);
+                mDlg.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                mDlg.setMessage("서버 찾는중");
+                mDlg.show();
+                mDlg.setCancelable(false);
+            }
+
+            @Override
+            protected Integer doInBackground(Integer... params) {
+                // TODO Auto-generated method stub
                 String msg = "";
                 try {
                     if (gcm == null) {
@@ -192,48 +195,79 @@ public class MainActivity extends TabActivity {
                     }
                     regid = gcm.register(SENDER_ID);
                     msg = "Device registered, registration ID=" + regid;
-                    //msg = regid;
-
-                    SharedPreferences.Editor editor = myinfo.edit();
-                    editor.putString(REGID, regid);
+                    //regID를 발급받는다.
+                    SharedPreferences.Editor editor = information.edit();
+                    editor.putString("regid", regid);
                     editor.commit();
                     System.out.println(msg);
 
-                    while(regFlag == 0){
 
-                        //대기
-                    }
-                    msg = "UP_"+myinfo.getString("storedId","")
-                            +"NAME_"+myinfo.getString("storedName","")
-                            +"EMAIL_"+myinfo.getString("storedEmail","")
-                            +"REG_"+regid;
+                    //mDlg.show();
+                    //while문의 break 조건은 계정정보가 완료이다.
+                    msg = "UP_" + clientID
+                            + "NAME_" + clientNAME
+                            + "EMAIL_" + clientEM
+                            + "REG_" + regid;
 
-                    socket = new Socket(InetAddress.getByName(IP),PORT);
+                    publishProgress("서버에 접속 중");
+                    socket = new Socket(InetAddress.getByName(IP), PORT);
                     os = new DataOutputStream(socket.getOutputStream());
+                    is = new DataInputStream(socket.getInputStream());
                     os.writeUTF(msg);
+                    msg = is.readUTF();
                     socket.close();
 
-                    // 서버에 발급받은 등록 아이디를 전송한다.
-                    // 등록 아이디는 서버에서 앱에 푸쉬 메시지를 전송할 때 사용된다.
-                    sendRegistrationIdToBackend();
-
-                    // 등록 아이디를 저장해 등록 아이디를 매번 받지 않도록 한다.
-                    storeRegistrationId(context, regid);
+                    if(msg.equals("success")){
+                        //regid와 앱 버전을 저장한다.
+                        storeRegistrationId(context, regid);
+                        return 1;
+                    }
+                    else if(msg.equals("false")){
+                        return 2;
+                    }
+                    return 0;
                 } catch (IOException ex) {
-                    msg = "Error :" + ex.getMessage();
-                    // If there is an error, don't just keep trying to register.
-                    // Require the user to click a button again, or perform
-                    // exponential back-off.
+                    //msg = "Error :" + ex.getMessage();
+                    Log.d("TAG", ex.getMessage());
+                    return 0;
                 }
-                return msg;
+            }
+
+            //onProgressUpdate() 함수는 publishProgress() 함수로 넘겨준 데이터들을 받아옴
+            @Override
+            protected void onProgressUpdate(String... msg) {
+                // TODO Auto-generated method stub
+                if (msg[0] ==""){
+                    mDlg.setMessage(msg[0]);
+                }
             }
 
             @Override
-            protected void onPostExecute(String msg) {
-                //mDisplay.append(msg + "\n");
+            protected void onPostExecute(Integer msg) {
+                // TODO Auto-generated method stub
+                if(msg == 1){
+                    Toast.makeText(MainActivity.this, "서버 접속 성공.", Toast.LENGTH_LONG).show();
+                    SharedPreferences.Editor editor= information.edit();
+                    editor.putString("storedName", clientNAME);
+                    editor.putString("storedEmail", clientEM);
+                    editor.putString("storedId",clientID);
+                    editor.putString("storedIp",IP);
+                    editor.commit();
+                    mDlg.dismiss();
+                }
+                else if(msg == 2){
+                    Toast.makeText(MainActivity.this, "중복 ID가 존재합니다..", Toast.LENGTH_LONG).show();
+                    mDlg.dismiss();
+                    finish();
+                }
+                else{
+                    Toast.makeText(MainActivity.this, "서버 등록 실패.", Toast.LENGTH_LONG).show();
+                    mDlg.dismiss();
+                    finish();
+                }
             }
 
-        }.execute(null, null, null);
+        }.execute(1);
     }
 
     private void storeRegistrationId(Context context, String regid) {
@@ -246,9 +280,6 @@ public class MainActivity extends TabActivity {
         editor.commit();
     }
 
-    private void sendRegistrationIdToBackend() {
-
-    }
 
     private String getRegistrationId(Context context) {
         final SharedPreferences prefs = getGCMPreferences(context);
@@ -258,8 +289,6 @@ public class MainActivity extends TabActivity {
             return "";
         }
 
-        // 앱이 업데이트 되었는지 확인하고, 업데이트 되었다면 기존 등록 아이디를 제거한다.
-        // 새로운 버전에서도 기존 등록 아이디가 정상적으로 동작하는지를 보장할 수 없기 때문이다.
         int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
         int currentVersion = getAppVersion(context);
         if (registeredVersion != currentVersion) {
@@ -289,7 +318,6 @@ public class MainActivity extends TabActivity {
     protected void onResume() {
         super.onResume();
         checkPlayServices();
-        //dialog.dismiss();
     }
 
     private boolean checkPlayServices() {
@@ -308,6 +336,6 @@ public class MainActivity extends TabActivity {
     }
 
     public String getStoredID(){
-        return myinfo.getString("storedId","");
+        return information.getString("storedId","");
     }
 }

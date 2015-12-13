@@ -17,7 +17,6 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -42,8 +41,6 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
 
     //일정추가 버튼
     ImageView btn_addTask;
-    //공유버튼
-    ImageButton btn_share;
 
     //일정관리를 위한 DB
     static MyDBHelper myDBHelper;
@@ -136,8 +133,6 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
     static public void notificatonCalander(String title, String date, String time){
         System.out.println(title + date + time);
         Cursor cursor1;
-        //MyDBHelper addDBHelper = new MyDBHelper(getAppContext(), "Today.db", null, 1);
-        //SQLiteDatabase addb = addDBHelper.getWritableDatabase();
         cursor1 = db.rawQuery("SELECT * FROM today WHERE title = '"+title+"' and date = '"+date + "' and time = '"+time+"'", null);
         int flag = 0;
         while(cursor1.moveToNext()){
@@ -151,8 +146,7 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
                     + date + "', '"
                     + time + "');");
             System.out.println("ADDED TASK");
-        }//gv_adapter.notifyDataSetChanged();*/
-
+        }
     }
 
     private class CustomAdapter<String> extends BaseAdapter implements OnClickListener {

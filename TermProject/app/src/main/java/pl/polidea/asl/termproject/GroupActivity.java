@@ -35,7 +35,7 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
     Button room3;
     Button room4;
     Button room5;
-    SharedPreferences myinfo;
+    SharedPreferences information;
     MyDBHelper myDBHelper;
     SQLiteDatabase db;
     Cursor cursor;
@@ -55,7 +55,7 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group);
-        myinfo = PreferenceManager.getDefaultSharedPreferences(this);
+        information = PreferenceManager.getDefaultSharedPreferences(this);
         myDBHelper = new MyDBHelper(this, "Today.db", null, 1);
         db = myDBHelper.getWritableDatabase();
 
@@ -80,33 +80,33 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
         room4.setOnLongClickListener(this);
         room5.setOnLongClickListener(this);
 
-        tv_addr.setText(myinfo.getString("storedIp", ""));
-        tv_id.setText(myinfo.getString("storedId",""));
+        tv_addr.setText(information.getString("storedIp", ""));   //저장된 IP 불러오기
+        tv_id.setText(information.getString("storedId",""));        //저장된 아이디 불러오기
 
-        if(myinfo.getString("room1","")==""){
+        if(information.getString("room1","")==""){      //방에 저장된 정보가 없다면 NULL표시
             room1.setText("#NULL");
             room1.setTextColor(Color.parseColor("#0000FF"));
-        } else{ room1.setText(myinfo.getString("room1name",""));
+        } else{ room1.setText(information.getString("room1name",""));
         }
-        if(myinfo.getString("room2","")==""){
+        if(information.getString("room2","")==""){
             room2.setText("#NULL");
             room2.setTextColor(Color.parseColor("#0000FF"));
-        } else{ room2.setText(myinfo.getString("room2name", ""));
+        } else{ room2.setText(information.getString("room2name", ""));
         }
-        if(myinfo.getString("room3","")==""){
+        if(information.getString("room3","")==""){
             room3.setText("#NULL");
             room3.setTextColor(Color.parseColor("#0000FF"));
-        } else{ room3.setText(myinfo.getString("room3name", ""));
+        } else{ room3.setText(information.getString("room3name", ""));
         }
-        if(myinfo.getString("room4","")==""){
+        if(information.getString("room4","")==""){
             room4.setText("#NULL");
             room4.setTextColor(Color.parseColor("#0000FF"));
-        } else{ room4.setText(myinfo.getString("room4name", ""));
+        } else{ room4.setText(information.getString("room4name", ""));
         }
-        if(myinfo.getString("room5","")==""){
+        if(information.getString("room5","")==""){
             room5.setText("#NULL");
             room5.setTextColor(Color.parseColor("#0000FF"));
-        } else{ room5.setText(myinfo.getString("room5name",""));    }       //방 초기화
+        } else{ room5.setText(information.getString("room5name",""));    }       //방 초기화
     }
 
 
@@ -121,22 +121,22 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
             case R.id.bt_room5: flag = 5;   break;
             case R.id.bt_ip: flag = 6;    break;
         }
-        //Toast.makeText(getApplicationContext(), "CLICK", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "ROOM"+flag, Toast.LENGTH_SHORT).show();
 
         if(flag  == 6){
-            changeIP();
+            changeIP();     //아이피 변경 다이얼로그
         }
-        else if (myinfo.getString("room"+flag,"") == ""){
-            createRoom(flag);
+        else if (information.getString("room"+flag,"") == ""){
+            createRoom(flag);   //방 생성 다이얼로그
         }
-        else if (myinfo.getString("room"+flag,"") != ""){
-            inforRoom(flag);
+        else if (information.getString("room"+flag,"") != ""){
+            inforRoom(flag);    //방 정보 다이얼로그
         }
     }
 
 
     @Override
-    public boolean onLongClick(View view) {
+    public boolean onLongClick(View view) {     //방 삭제
         int flag = 0;
         switch (view.getId()){
             case R.id.bt_room1: flag = 1;   break;
@@ -146,25 +146,24 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
             case R.id.bt_room5: flag = 5;   break;
         }
         Toast.makeText(getApplicationContext(), "LONG CLICK", Toast.LENGTH_SHORT).show();
-        deleteRoom(flag);
+        deleteRoom(flag);   //방 삭제 다이얼로그
 
         return false;
     }
 
-    public void changeIP(){
-        LayoutInflater inflater = getLayoutInflater();
+    public void changeIP(){     //서버 아이피 변경 다이얼로그
+        LayoutInflater inflater = getLayoutInflater();       //서버 변경 다이얼로그 콘텐츠 뷰
         final View view_enroll = inflater.inflate(R.layout.activity_dialogue_changeip, null);
         final EditText ip = (EditText) view_enroll.findViewById(R.id.et_chaip);
-        final AlertDialog.Builder buider = new AlertDialog.Builder(this); //AlertDialog.Builder 객체 생성
-        buider.setIcon(R.mipmap.ic_launcher);
-        buider.setTitle("CREATE SERVER IP ADDRESS"); //Dialog 제목
-        buider.setView(view_enroll); //위에서 inflater가 만든 dialogView 객체 세팅 (Customize)
+        final AlertDialog.Builder buider = new AlertDialog.Builder(this); //객체 생성
+        buider.setIcon(R.mipmap.ic_launcher);   //이미지
+        buider.setTitle("CREATE SERVER IP ADDRESS"); //타이틀
+        buider.setView(view_enroll); //다이얼로그 객체 세팅
         buider.setPositiveButton("변경", new DialogInterface.OnClickListener() {
-
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String msg = ip.getText().toString();
-                SharedPreferences.Editor editor = myinfo.edit();
+                SharedPreferences.Editor editor = information.edit();
                 Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
                 editor.putString("storedIp", msg);
                 editor.commit();
@@ -183,68 +182,65 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                 dialog.dismiss();
             }
         });
-        buider.show();
+        buider.show();      //다이얼로그 보여주기
     }
 
-    public void createRoom(final int roomNumber){
-        LayoutInflater inflater = getLayoutInflater();
+    public void createRoom(final int roomNumber){   //방 생성 다이얼로그
+        LayoutInflater inflater = getLayoutInflater();      //방 생성 다이얼로그 컨텐츠 뷰
         final View view_enroll = inflater.inflate(R.layout.activity_dialogue_createroom, null);
         final EditText roomName = (EditText) view_enroll.findViewById(R.id.et_roomName);
-        final AlertDialog.Builder buider = new AlertDialog.Builder(this); //AlertDialog.Builder 객체 생성
-        Button enterRoom = (Button) view_enroll.findViewById(R.id.bt_enterroom);
+        final AlertDialog.Builder buider = new AlertDialog.Builder(this); //객체 생성
 
-        enterRoom.setOnClickListener(new  View.OnClickListener() {
+        buider.setIcon(R.mipmap.ic_launcher);
+        buider.setTitle("CREATE SHARE GROUP"); //타이틀
+        buider.setView(view_enroll); //빌더 세팅
+
+        buider.setNeutralButton("입장", new DialogInterface.OnClickListener() {
+            //Dialog에 입장 버튼 설정
             @Override
-            public void onClick(View view) {
+            public void onClick(final DialogInterface dialogInterface, int i) {
                 try{
-                    LayoutInflater inninflater = getLayoutInflater();
+                    LayoutInflater inninflater = getLayoutInflater();       //Inner Dialog 객체 선언
                     final View view_enroll = inninflater.inflate(R.layout.activity_dialogue_enterroom, null);
                     final EditText hostid = (EditText) view_enroll.findViewById(R.id.et_hostid);
                     final EditText roomid = (EditText) view_enroll.findViewById(R.id.et_roomID);
-                    final AlertDialog.Builder innbuider = new AlertDialog.Builder(GroupActivity.this); //AlertDialog.Builder 객체 생성
+                    final AlertDialog.Builder innbuider = new AlertDialog.Builder(GroupActivity.this); //객체 생성
                     innbuider.setIcon(R.mipmap.ic_launcher);
-                    innbuider.setTitle("ENTER SHARE GROUP"); //Dialog 제목
-                    innbuider.setView(view_enroll); //위에서 inflater가 만든 dialogView 객체 세팅 (Customize)
+                    innbuider.setTitle("ENTER SHARE GROUP"); //타이틀
+                    innbuider.setView(view_enroll); //이너빌더 세팅
                     innbuider.setPositiveButton("입장", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            Toast.makeText(getApplicationContext(), "클릭됨.", Toast.LENGTH_SHORT).show();
-                            //수정
+                            Toast.makeText(getApplicationContext(), "방에 입장합니다..", Toast.LENGTH_SHORT).show();
                             enterRoomInBackGround(roomNumber, hostid.getText().toString(), Integer.parseInt(roomid.getText().toString()));
+                            dialogInterface.dismiss();
                             dialog.dismiss();
                         }
-
                     });
-
                     innbuider.setOnCancelListener(new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
-                            dialog.dismiss();//finish();
+                            dialog.dismiss();
                         }
                     });
                     innbuider.setNegativeButton("취소", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();//finish();
+                            dialog.dismiss();
                         }
                     });
                     innbuider.show();
                 }
                 catch (Exception e){
-                    Toast.makeText(getApplicationContext(), "에러다.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "에러.", Toast.LENGTH_SHORT).show();
                 }
             }
         });
-        buider.setIcon(R.mipmap.ic_launcher);
-        buider.setTitle("CREATE SHARE GROUP"); //Dialog 제목
-        buider.setView(view_enroll); //위에서 inflater가 만든 dialogView 객체 세팅 (Customize)
         buider.setPositiveButton("생성", new DialogInterface.OnClickListener() {
-            //Dialog에 "Complite"라는 타이틀의 버튼을 설정
+            //Dialog에 생성 버튼 설정
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-
+            public void onClick(DialogInterface dialog, int which) {    //방이 생성 된다.
                 String name = roomName.getText().toString();//방 제목
-
                 switch (roomNumber) {
                     case 1:
                         room1.setText(name);
@@ -267,31 +263,26 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                         room5.setTextColor(Color.parseColor("#000000"));
                         break;
                 }
-                //서버에 전송, 서버에서 받음.
 
-                SharedPreferences.Editor editor = myinfo.edit();
-                //editor.putString("room" + roomNumber, roomNumber + "");
+
+                SharedPreferences.Editor editor = information.edit();
                 editor.putString("room" + roomNumber + "name", name);
-                editor.commit();
-
+                editor.commit();    //쉐어 프리퍼런시스에 정보를 저장한다.
 
                 createRoomInBackGround(roomNumber, name, true);
-
-                //서버에 등록
-                //register(email, redID, name);
-                //액티비티상에 내정보 등록 & 어플리케이션에 내정보 저장
+                //백그라운드에서 서버랑 통신한다.
             }
         });
         buider.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
-                dialog.dismiss();//finish();
+                dialog.dismiss();
             }
         });
         buider.setNegativeButton("취소", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();//finish();
+                dialog.dismiss();
             }
         });
 
@@ -313,7 +304,6 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                     // 확인 버튼 클릭시 설정
                     public void onClick(DialogInterface dialog, int whichButton){
                         createRoomInBackGround(roomNumber, null, false);        //방 삭제 서버 전송
-
                         switch (roomNumber){
                             case 1: room1.setText("#NULL");    room1.setTextColor(Color.parseColor("#0000FF"));    break;
                             case 2: room2.setText("#NULL");    room2.setTextColor(Color.parseColor("#0000FF"));    break;
@@ -321,7 +311,7 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                             case 4: room4.setText("#NULL");    room4.setTextColor(Color.parseColor("#0000FF"));    break;
                             case 5: room5.setText("#NULL");    room5.setTextColor(Color.parseColor("#0000FF"));    break;
                         }
-                        SharedPreferences.Editor editor = myinfo.edit();
+                        SharedPreferences.Editor editor = information.edit();
                         editor.putString("room"+roomNumber, "");
                         editor.putString("room"+roomNumber+"id", "");
                         editor.commit();
@@ -330,21 +320,18 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                 })
                 .setNegativeButton("취소", new DialogInterface.OnClickListener() {
                     // 취소 버튼 클릭시 설정
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        dialog.cancel();
+                    public void onClick(DialogInterface dialog, int whichButton) {dialog.cancel();
                     }
                 });
 
         AlertDialog dialog = builder.create();    // 알림창 객체 생성
         dialog.show();    // 알림창 띄우기
-
-
     }
 
     public void inforRoom(final int roomNumber){
         AlertDialog.Builder alertBuilder = new AlertDialog.Builder(GroupActivity.this);
         alertBuilder.setIcon(R.mipmap.ic_launcher);
-        alertBuilder.setTitle("선택하세요   -방 코드 :"+myinfo.getString("room"+roomNumber,""));
+        alertBuilder.setTitle("선택하세요   -방 코드 :"+information.getString("room"+roomNumber,""));
 
         // List Adapter 생성
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(GroupActivity.this, android.R.layout.select_dialog_singlechoice);
@@ -361,12 +348,10 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
         // Adapter 셋팅
         alertBuilder.setAdapter(adapter, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-
-                // AlertDialog 안에 있는 AlertDialog
+                // AlertDialog 안에 있는 AlertDialog Inner Dialog
                 String strName = adapter.getItem(id);
                 AlertDialog.Builder innBuilder = new AlertDialog.Builder(GroupActivity.this);
                 final ArrayAdapter<String> innAdapter = new ArrayAdapter<String>(GroupActivity.this, android.R.layout.select_dialog_singlechoice);
-
                     innBuilder.setIcon(R.mipmap.ic_launcher);
                     innBuilder.setTitle("일정 추가");
                     innBuilder.setNegativeButton("취소",
@@ -376,7 +361,7 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                                 }
                             });
                     cursor = db.rawQuery("SELECT * FROM today ", null);
-
+                    //DB에 접속하여 자신의 일정을 전부 가져와 리스트에 추가한다.
                     while (cursor.moveToNext()) {
                         innAdapter.add(cursor.getString(1) + " " + cursor.getString(2) + " " + cursor.getString(3));
                         System.out.println(cursor.getString(0) + " " + cursor.getString(1) + " " + cursor.getString(2) + " " + cursor.getString(3));
@@ -386,8 +371,6 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                             adjustRoomInBackGround(roomNumber, id, true);
                         }
                     });
-                    //innBuilder.setMessage(strName);
-
                     innBuilder.show();
 
             }
@@ -396,22 +379,20 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
     }
 
     public void enterRoomInBackGround(final int roomNumber, final String hostId, final int roomId) {
-
+        //방 입장을 위해 서버 접속
         new AsyncTask<Void, Void, String>() {
             @Override
             protected String doInBackground(Void... params) {
 
                 String msg = "";
                 try {
-                    IP = myinfo.getString("storedIp","");
+                    IP = information.getString("storedIp","");
                     System.out.println(IP);
-
-                    socket = new Socket(InetAddress.getByName(IP), PORT);
+                    socket = new Socket(InetAddress.getByName(IP), PORT);   //5555포트로 소켓통신
                     os = new DataOutputStream(socket.getOutputStream());
                     is = new DataInputStream(socket.getInputStream());
-
-                    msg = "EN_"+hostId+"ROOMID_"+roomId+"ID_"+myinfo.getString("storedId","")+"ROOM_"+roomNumber;
-
+                    //어느 방에 입장 할 것인지 메시지에 첨부한다.
+                    msg = "EN_"+hostId+"ROOMID_"+roomId+"ID_"+information.getString("storedId","")+"ROOM_"+roomNumber;
                     os.writeUTF(msg);
 
                     msg = is.readUTF();
@@ -423,55 +404,48 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
                 return msg;
             }
             @Override
-            protected void onPostExecute(String msg) {
-                if(msg.equals("false")){
+            protected void onPostExecute(String msg) {      //전송이 끝난 후
+                if(msg.equals("false")){    //해당 정보가 서버 DB에 없을 경우
                     Toast.makeText(getApplicationContext(), "잘못된 입력.", Toast.LENGTH_SHORT).show();
                 }
                 else{
                     switch (roomNumber){
-                        case 1: room1.setText(msg);    room1.setTextColor(Color.parseColor("#0000FF"));    break;
-                        case 2: room2.setText(msg);    room2.setTextColor(Color.parseColor("#0000FF"));    break;
-                        case 3: room3.setText(msg);    room3.setTextColor(Color.parseColor("#0000FF"));    break;
-                        case 4: room4.setText(msg);    room4.setTextColor(Color.parseColor("#0000FF"));    break;
-                        case 5: room5.setText(msg);    room5.setTextColor(Color.parseColor("#0000FF"));    break;
+                        case 1: room1.setText(msg);    room1.setTextColor(Color.parseColor("#000000"));    break;
+                        case 2: room2.setText(msg);    room2.setTextColor(Color.parseColor("#000000"));    break;
+                        case 3: room3.setText(msg);    room3.setTextColor(Color.parseColor("#000000"));    break;
+                        case 4: room4.setText(msg);    room4.setTextColor(Color.parseColor("#000000"));    break;
+                        case 5: room5.setText(msg);    room5.setTextColor(Color.parseColor("#000000"));    break;
                     }
-                    SharedPreferences.Editor editor = myinfo.edit();
+                    SharedPreferences.Editor editor = information.edit();
                     editor.putString("room"+roomNumber, roomId+"");
                     editor.putString("room"+roomNumber+"name", msg);
-
-                    //editor.putString("")
-                    editor.commit();
+                    editor.commit();    //룸 정보들을 저장한다. (방 제목, 방 코드)
                 }
             }
         }.execute(null, null, null);
     }
 
     public void adjustRoomInBackGround(final int roomNumber, final int id, final boolean flag){
-
+        //방 수정을 위해 서버와 통신한다. (일정 추가)
         new AsyncTask<Void, Void, Integer>() {
             @Override
             protected Integer doInBackground(Void... params) {
                 int roomID = 0;
                 String msg = "", body = "";
                 try {
-                    IP = myinfo.getString("storedIp","");
+                    IP = information.getString("storedIp","");
                     System.out.println(IP);
-
+                    //서버와 소켓 통신 시작.
                     socket = new Socket(InetAddress.getByName(IP), PORT);
                     os = new DataOutputStream(socket.getOutputStream());
                     is = new DataInputStream(socket.getInputStream());
-                    //System.out.println("test->"+id);
+                    //해당 position으로 커서를 이동한다.
                     cursor.moveToPosition(id);
-
+                    //선택된 일정을 스트링에 대입하여 전송한다.
                     body = cursor.getString(1) + "__" + cursor.getString(2) + "__" + cursor.getString(3);
-                    System.out.println("test");
                     System.out.println(body);
-                    if(flag == true)    msg = "AD_" + body + "ROOMID_"+myinfo.getString("room"+roomNumber,"");
-                    else if(flag == false)  msg = "LI_"+body;
+                    msg = "AD_" + body + "ROOMID_"+information.getString("room"+roomNumber,"");
                     os.writeUTF(msg);
-                    //msg = is.readUTF();
-                    //roomID = Integer.parseInt(msg);   ????
-                    //수정
                     socket.close();
                 } catch (Exception e){
                     Log.d("TAG",e.getMessage());
@@ -486,24 +460,24 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
         }.execute(null, null, null);
     }
 
-    public void createRoomInBackGround(final int roomNumber, final String name, final boolean flag){       //방 생성 서버 전송
-
-        //final int roomID = 0;
+    public void createRoomInBackGround(final int roomNumber, final String name, final boolean flag){       //방 생성,삭제 서버 전송
+        //방 생성과 삭제를 위해 서버와 통신
         new AsyncTask<Void, Void, Integer>() {
             @Override
             protected Integer doInBackground(Void... params) {
                 int roomID=0;
-                String msg="";//+myinfo.getString("storedId","");
+                String msg="";
                 try {
-
-                    IP = myinfo.getString("storedIp","");
+                    //서버와 소켓 통신 시작
+                    IP = information.getString("storedIp","");
                     System.out.println(IP);
                     socket = new Socket(InetAddress.getByName(IP), PORT);
                     os = new DataOutputStream(socket.getOutputStream());
                     is = new DataInputStream(socket.getInputStream());
-                    if(flag == true)    msg = "MK_" +myinfo.getString("storedId","")+"TITLE_"+name+ "ROOM_"+roomNumber;
-
-                    else if(flag == false) msg = "DR_"+ myinfo.getString("storedId","")+"ROOM_"+roomNumber;
+                    //방 생성일경우
+                    if(flag == true)    msg = "MK_" +information.getString("storedId","")+"TITLE_"+name+ "ROOM_"+roomNumber;
+                    //방 삭제일경우
+                    else if(flag == false) msg = "DR_"+ information.getString("storedId","")+"ROOM_"+roomNumber;
 
                     os.writeUTF(msg);
                     msg = is.readUTF();
@@ -518,13 +492,13 @@ public class GroupActivity extends Activity implements View.OnClickListener, Vie
             }
             @Override
             protected void onPostExecute(Integer roomID) {
-                SharedPreferences.Editor editor = myinfo.edit();
+                SharedPreferences.Editor editor = information.edit();
                 if(flag == true) {
                     editor.putString("room" + roomNumber, roomID + "");
-                    Toast.makeText(getApplicationContext(), "방생성 ! roomID = "+roomID, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "방생성 ! roomCODE = "+roomID, Toast.LENGTH_SHORT).show();
                 }else {
                     editor.putString("room" + roomNumber , "");
-                    Toast.makeText(getApplicationContext(), "방삭제 ! roomID = 0", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "방삭제 ! roomCODE = "+roomID, Toast.LENGTH_SHORT).show();
                 }
                 editor.commit();
             }

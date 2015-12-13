@@ -19,10 +19,4 @@
             android:id="@+id/et_roomName"
             />
     </LinearLayout>
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:id="@+id/bt_enterroom"
-        android:text="방 입장"/>
 </LinearLayout>
