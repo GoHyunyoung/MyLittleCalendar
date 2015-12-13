@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 public class CalendarActivity extends Activity implements OnClickListener, OnItemClickListener {
     ArrayList<String> m_date;
@@ -94,11 +95,12 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
         btn_addTask.setImageDrawable(getResources().getDrawable(R.drawable.ic_btn_addtask));
         //btn_share.setImageDrawable(getResources().getDrawable(R.drawable.ic_btn_share));
 
+//      +버튼을 눌럿을때 호출되는 클릭이벤트
         btn_addTask.setOnClickListener(new  OnClickListener() {
             @Override
             public void onClick(View view) {
                 try{
-
+                    //선택된 셀의 2번째(일자)를 int형으로 변환시도
                     Integer.parseInt(selectedDate.split("/")[2]);
 
                     Intent intent = new Intent(CalendarActivity.this, DetailActivity.class);
@@ -107,7 +109,7 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
                     intent.putExtra("Param", 1);
                     startActivity(intent);
                 }
-
+              //int로 안바뀌면 선택된 일자는 이상한것
                 catch (Exception e){
                     Toast.makeText(getApplicationContext(), "날짜를 다시 선택해주세요.", Toast.LENGTH_SHORT).show();
                 }
@@ -124,6 +126,8 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
         tv_year.setText(year + "");
         tv_month.setText(mon + "");
 
+
+        //날짜를채움
         fillDate(year, mon);
 //        fillColor(year,mon);
 
@@ -149,6 +153,7 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
         }
     }
 
+    //일자와 일자밑에 아이콘을 넣기위해 사용자임의로 만든 CustomAdapter
     private class CustomAdapter<String> extends BaseAdapter implements OnClickListener {
         ArrayList m_date;
 
@@ -177,95 +182,58 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
             return position;
         }
 
+
+        //화면에 그리드를 채워질때 호출되는 getView메소드
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View v = convertView;
 
+            //layout 폴더에 cell 레이아웃을 사용
             LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             v = inflater.inflate(R.layout.cell, null);
-
+            //텍스트뷰와 이미지뷰3개 사용
             TextView tv = (TextView) v.findViewById(R.id.date);
-            ImageView iv1 = (ImageView) v.findViewById(R.id.task1);
-            ImageView iv2 = (ImageView) v.findViewById(R.id.task2);
-            ImageView iv3 = (ImageView) v.findViewById(R.id.task3);
+            //한 cell에 들어가는 아이콘은 최대3개로 설정
+            ImageView[] iv = new ImageView[3];
+            iv[0] = (ImageView) v.findViewById(R.id.task1);
+            iv[1] = (ImageView) v.findViewById(R.id.task2);
+            iv[2] = (ImageView) v.findViewById(R.id.task3);
             LinearLayout layout = (LinearLayout)v.findViewById(R.id.layout);
             tv.setText(getItem(position).toString());
 
+            //만약에 해당일자에 일정이 있으면 일정에 따른 아이콘 등록
             cursor = db.rawQuery("SELECT * FROM today WHERE date = '" + year + "/" + mon + "/" + getItem(position) + "'", null);
-            if (cursor.moveToNext()) {
-                //레이아웃을 빨강으로처리
-                layout.setBackgroundColor(0x55f90000);
-                //문구에있는 내용에 따라 아이콘모양 추가
-                if (cursor.getString(1).contains("생일") ||
-                        cursor.getString(1).contains("결혼") ||
-                        cursor.getString(1).contains("축하"))
-                    iv1.setImageDrawable(getResources().getDrawable(R.drawable.ic_birth));
-                else if (cursor.getString(1).contains("회의") ||
-                        cursor.getString(1).contains("미팅") ||
-                        cursor.getString(1).contains("토론") ||
-                        cursor.getString(1).contains("모임"))
-                    iv1.setImageDrawable(getResources().getDrawable(R.drawable.ic_meeting));
-                else if (cursor.getString(1).contains("공연") ||
-                        cursor.getString(1).contains("축제") ||
-                        cursor.getString(1).contains("여행") ||
-                        cursor.getString(1).contains("할인"))
-                    iv1.setImageDrawable(getResources().getDrawable(R.drawable.ic_ticket));
-                else if (cursor.getString(1).contains("과제") ||
-                        cursor.getString(1).contains("시험") ||
-                        cursor.getString(1).contains("퀴즈") ||
-                        cursor.getString(1).contains("작성"))
-                    iv1.setImageDrawable(getResources().getDrawable(R.drawable.ic_test));
-                else
-                    iv1.setImageDrawable(getResources().getDrawable(R.drawable.ic_check));
-            }
-            if (cursor.moveToNext()) {
-                if (cursor.getString(1).contains("생일") ||
-                        cursor.getString(1).contains("결혼") ||
-                        cursor.getString(1).contains("축하"))
-                    iv2.setImageDrawable(getResources().getDrawable(R.drawable.ic_birth));
-                else if (cursor.getString(1).contains("회의") ||
-                        cursor.getString(1).contains("미팅") ||
-                        cursor.getString(1).contains("토론") ||
-                        cursor.getString(1).contains("모임"))
-                    iv2.setImageDrawable(getResources().getDrawable(R.drawable.ic_meeting));
-                else if (cursor.getString(1).contains("공연") ||
-                        cursor.getString(1).contains("축제") ||
-                        cursor.getString(1).contains("여행") ||
-                        cursor.getString(1).contains("할인"))
-                    iv2.setImageDrawable(getResources().getDrawable(R.drawable.ic_ticket));
-                else if (cursor.getString(1).contains("과제") ||
-                        cursor.getString(1).contains("시험") ||
-                        cursor.getString(1).contains("퀴즈") ||
-                        cursor.getString(1).contains("작성"))
-                    iv2.setImageDrawable(getResources().getDrawable(R.drawable.ic_test));
-                else
-                    iv2.setImageDrawable(getResources().getDrawable(R.drawable.ic_check));
+            //커서가 무브할수 있으면 일정이 등록되어있다는 것
+
+            for(int i=0;i<3;i++) {
+                if (cursor.moveToNext()) {
+                    //레이아웃을 빨강색으로처리
+                    layout.setBackgroundColor(0x55f90000);
+                    //문구에있는 내용에 따라 아이콘모양 추가
+                    if (cursor.getString(1).contains("생일") ||
+                            cursor.getString(1).contains("결혼") ||
+                            cursor.getString(1).contains("축하"))
+                        iv[i].setImageDrawable(getResources().getDrawable(R.drawable.ic_birth));
+                    else if (cursor.getString(1).contains("회의") ||
+                            cursor.getString(1).contains("미팅") ||
+                            cursor.getString(1).contains("토론") ||
+                            cursor.getString(1).contains("모임"))
+                        iv[i].setImageDrawable(getResources().getDrawable(R.drawable.ic_meeting));
+                    else if (cursor.getString(1).contains("공연") ||
+                            cursor.getString(1).contains("축제") ||
+                            cursor.getString(1).contains("여행") ||
+                            cursor.getString(1).contains("할인"))
+                        iv[i].setImageDrawable(getResources().getDrawable(R.drawable.ic_ticket));
+                    else if (cursor.getString(1).contains("과제") ||
+                            cursor.getString(1).contains("시험") ||
+                            cursor.getString(1).contains("퀴즈") ||
+                            cursor.getString(1).contains("작성"))
+                        iv[i].setImageDrawable(getResources().getDrawable(R.drawable.ic_test));
+                    else iv[i].setImageDrawable(getResources().getDrawable(R.drawable.ic_check));
+                }
             }
 
-            if (cursor.moveToNext()) {
-                if (cursor.getString(1).contains("생일") ||
-                        cursor.getString(1).contains("결혼") ||
-                        cursor.getString(1).contains("축하"))
-                    iv3.setImageDrawable(getResources().getDrawable(R.drawable.ic_birth));
-                else if (cursor.getString(1).contains("회의") ||
-                        cursor.getString(1).contains("미팅") ||
-                        cursor.getString(1).contains("토론") ||
-                        cursor.getString(1).contains("모임"))
-                    iv3.setImageDrawable(getResources().getDrawable(R.drawable.ic_meeting));
-                else if (cursor.getString(1).contains("공연") ||
-                        cursor.getString(1).contains("축제") ||
-                        cursor.getString(1).contains("여행") ||
-                        cursor.getString(1).contains("할인"))
-                    iv3.setImageDrawable(getResources().getDrawable(R.drawable.ic_ticket));
-                else if (cursor.getString(1).contains("과제") ||
-                        cursor.getString(1).contains("시험") ||
-                        cursor.getString(1).contains("퀴즈") ||
-                        cursor.getString(1).contains("작성"))
-                    iv3.setImageDrawable(getResources().getDrawable(R.drawable.ic_test));
-                else
-                    iv3.setImageDrawable(getResources().getDrawable(R.drawable.ic_check));
-            }
-
+            //셀이있는 레이아웃 전체에 onClickListener설정
             layout.setOnClickListener(this);
 
             return v;
@@ -330,7 +298,6 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
         // TODO Auto-generated method stub
         switch (view.getId()) {
 
-
             //다음달 버튼 클릭시
             case R.id.btn_next_month:
                 Date date = new Date();// 오늘에 날짜를 세팅 해준다.
@@ -342,8 +309,6 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
                 }
                 tv_year.setText(year + "");
                 tv_month.setText(mon + "");
-
-
 
                 fillDate(year, mon);
                 break;
@@ -365,6 +330,7 @@ public class CalendarActivity extends Activity implements OnClickListener, OnIte
         }
     }
 
+    //일자르 채워주는 함수
     private void fillDate(int year, int month) {
         m_date.clear();
 
